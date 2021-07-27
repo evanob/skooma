@@ -23,11 +23,11 @@ defmodule Skooma do
         Enum.member?(schema, :map) ->
           Skooma.Map.nested_map(data, schema, path)
 
-        Enum.member?(schema, :union) ->
-          union_handler(data, schema, path)
-
         Enum.member?(schema, :not_required) ->
           handle_not_required(data, schema, path)
+
+        Enum.member?(schema, :union) ->
+          union_handler(data, schema, path)
 
         Enum.member?(schema, :string) ->
           Basic.validator(&is_binary/1, "STRING", data, schema, path)

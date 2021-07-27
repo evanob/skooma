@@ -58,6 +58,14 @@ defmodule SkoomaTest do
     assert :ok = Skooma.valid?(test_data, test_schema)
   end
 
+  test "union types with not required" do
+    test_schema = [:union, [[:map, %{key1: [:string]}], [:int]], :not_required]
+
+    assert :ok = Skooma.valid?(8, test_schema)
+    assert :ok = Skooma.valid?(%{key1: "foo"}, test_schema)
+    assert :ok = Skooma.valid?(nil, test_schema)
+  end
+
   test "keyword list types" do
     test_data = [key1: "value1", key2: 2, key3: :atom3]
     test_schema = [key1: :string, key2: :int, key3: :atom]
@@ -200,6 +208,13 @@ defmodule SkoomaTest do
     assert :ok = Skooma.valid?(test_data, test_schema)
   end
 
+  test "list of union types, with not required" do
+    test_data = ["value", 1, nil]
+    test_schema = [:list, [:union, [:string, :int], :not_required]]
+
+    assert :ok = Skooma.valid?(test_data, test_schema)
+  end
+
   test "list of lists types" do
     test_data = [["value", "foo"], ["test"]]
     test_schema = [:list, [:list, :string]]
@@ -207,9 +222,23 @@ defmodule SkoomaTest do
     assert :ok = Skooma.valid?(test_data, test_schema)
   end
 
+  test "list of lists types, with not required" do
+    test_data = [["value", "foo"], ["test"], [nil]]
+    test_schema = [:list, [:list, :string, :not_required]]
+
+    assert :ok = Skooma.valid?(test_data, test_schema)
+  end
+
   test "list of list of union types" do
     test_data = [["value", "foo", 1], ["test", 0], [-2]]
     test_schema = [:list, [:list, [:union, [:string, :number]]]]
+
+    assert :ok = Skooma.valid?(test_data, test_schema)
+  end
+
+  test "list of list of union types with not required" do
+    test_data = [["value", "foo", 1], ["test", 0], [-2], [nil]]
+    test_schema = [:list, [:list, [:union, [:string, :number], :not_required]]]
 
     assert :ok = Skooma.valid?(test_data, test_schema)
   end
