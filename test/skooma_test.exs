@@ -121,15 +121,21 @@ defmodule SkoomaTest do
 
   test "map types with custom validator" do
     test_data = %{"prefix_a" => 1, "prefix_b" => 2}
-    test_schema = [:map, fn map ->
-      invalid_key = map |> Map.keys |> Enum.find(&(!(&1 =~ ~r/^prefix_/)))
-      invalid_value = map |> Map.values |> Enum.find(&(!is_number(&1)))
-      cond do
-        invalid_key -> {:error, "key #{invalid_key} not start with 'prefix_'"}
-        invalid_value -> {:error, "value #{invalid_value} is not number"}
-        true -> :ok
-      end
-    end, %{}]
+
+    test_schema = [
+      :map,
+      fn map ->
+        invalid_key = map |> Map.keys() |> Enum.find(&(!(&1 =~ ~r/^prefix_/)))
+        invalid_value = map |> Map.values() |> Enum.find(&(!is_number(&1)))
+
+        cond do
+          invalid_key -> {:error, "key #{invalid_key} not start with 'prefix_'"}
+          invalid_value -> {:error, "value #{invalid_value} is not number"}
+          true -> :ok
+        end
+      end,
+      %{}
+    ]
 
     expected_results = :ok
     results = Skooma.valid?(test_data, test_schema)
@@ -143,12 +149,14 @@ defmodule SkoomaTest do
       "things" => ["thing1", "thing2"],
       "stuff" => %{key3: %{key4: "thing4"}}
     }
+
     test_schema = %{
       :key1 => [:string],
       "key2" => [:map, %{color: [:string]}],
       "things" => [:list, :string],
       "stuff" => %{key3: %{key4: [:string]}}
     }
+
     expected_results = :ok
 
     results = Skooma.valid?(test_data, test_schema)
@@ -162,12 +170,14 @@ defmodule SkoomaTest do
       "things" => ["thing1", "thing2"],
       "stuff" => %{key3: %{}}
     }
+
     test_schema = %{
       :key1 => [:string],
       "key2" => [:map, %{color: [:string]}],
       "things" => [:list, :string],
       "stuff" => %{key3: %{key4: [:string, :not_required]}}
     }
+
     expected_results = :ok
 
     results = Skooma.valid?(test_data, test_schema)
@@ -186,13 +196,14 @@ defmodule SkoomaTest do
     my_hero = %{
       name: "Alkosh",
       race: "Khajiit",
-      friends: [ 
-        %{name: "Asurah", race: "Khajiit"}, 
+      friends: [
+        %{name: "Asurah", race: "Khajiit"},
         %{name: "Carlos", race: "Dwarf"}
       ]
     }
 
-    Skooma.valid?(my_hero, hero_schema()) # :ok
+    # :ok
+    Skooma.valid?(my_hero, hero_schema())
   end
 
   test "list types simple" do
@@ -216,7 +227,7 @@ defmodule SkoomaTest do
   test "list types complex" do
     test_data = [%{key1: "value1"}, %{key1: "value2"}, %{key1: "value 3"}]
     obj_schema = %{key1: [:string]}
-    test_schema = [:list, :map, fn() -> obj_schema end]
+    test_schema = [:list, :map, fn -> obj_schema end]
     expected_results = :ok
 
     results = Skooma.valid?(test_data, test_schema)

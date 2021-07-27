@@ -87,21 +87,26 @@ defmodule SkoomaErrorTest do
     test_data1 = %{"a" => 1, "prefix_b" => 2}
     test_data2 = %{"prefix_a" => "aa", "prefix_b" => 2}
 
-    test_schema = [:map, fn map ->
-      invalid_key = map |> Map.keys |> Enum.find(&(!(&1 =~ ~r/^prefix_/)))
-      invalid_value = map |> Map.values |> Enum.find(&(!is_number(&1)))
-      cond do
-        invalid_key -> {:error, "key #{invalid_key} not start with 'prefix_'"}
-        invalid_value -> {:error, "value #{invalid_value} is not number"}
-        true -> :ok
-      end
-    end, %{}]
+    test_schema = [
+      :map,
+      fn map ->
+        invalid_key = map |> Map.keys() |> Enum.find(&(!(&1 =~ ~r/^prefix_/)))
+        invalid_value = map |> Map.values() |> Enum.find(&(!is_number(&1)))
+
+        cond do
+          invalid_key -> {:error, "key #{invalid_key} not start with 'prefix_'"}
+          invalid_value -> {:error, "value #{invalid_value} is not number"}
+          true -> :ok
+        end
+      end,
+      %{}
+    ]
 
     expected_result1 = {:error, ["key a not start with 'prefix_'"]}
     expected_result2 = {:error, ["value aa is not number"]}
 
-    assert  expected_result1 == Skooma.valid?(test_data1, test_schema)
-    assert  expected_result2 == Skooma.valid?(test_data2, test_schema)
+    assert expected_result1 == Skooma.valid?(test_data1, test_schema)
+    assert expected_result2 == Skooma.valid?(test_data2, test_schema)
   end
 
   test "map types complex errors" do
@@ -111,16 +116,21 @@ defmodule SkoomaErrorTest do
       "things" => ["thing1", 5],
       "stuff" => %{key3: %{key4: 9}}
     }
+
     test_schema = %{
       :key1 => [:string],
       "key2" => [:map, %{color: [:string]}],
       "things" => [:list, :string],
       "stuff" => %{key3: %{key4: [:string]}}
     }
-    expected_results = {:error,
-                           ["Missing required keys: [:color]",
-                            "Expected STRING, got INTEGER 9, at stuff -> key3 -> key4",
-                            "Expected STRING, got INTEGER 5, at things -> index 1"]}
+
+    expected_results =
+      {:error,
+       [
+         "Missing required keys: [:color]",
+         "Expected STRING, got INTEGER 9, at stuff -> key3 -> key4",
+         "Expected STRING, got INTEGER 5, at things -> index 1"
+       ]}
 
     results = Skooma.valid?(test_data, test_schema)
     assert(expected_results == results)
@@ -129,10 +139,15 @@ defmodule SkoomaErrorTest do
   test "list types simple errors" do
     test_data = [1, 2, 3, 4]
     test_schema = [:list, :string]
-    expected_results = {:error, ["Expected STRING, got INTEGER 1, at index 0",
-                                 "Expected STRING, got INTEGER 2, at index 1",
-                                 "Expected STRING, got INTEGER 3, at index 2",
-                                 "Expected STRING, got INTEGER 4, at index 3"]}
+
+    expected_results =
+      {:error,
+       [
+         "Expected STRING, got INTEGER 1, at index 0",
+         "Expected STRING, got INTEGER 2, at index 1",
+         "Expected STRING, got INTEGER 3, at index 2",
+         "Expected STRING, got INTEGER 4, at index 3"
+       ]}
 
     results = Skooma.valid?(test_data, test_schema)
     assert(expected_results == results)
@@ -141,10 +156,14 @@ defmodule SkoomaErrorTest do
   test "list types complex errors" do
     test_data = [%{key1: 1}, %{key1: :value2}, %{key1: "value 3"}]
     obj_schema = %{key1: [:string]}
-    test_schema = [:list, :map, fn() -> obj_schema end]
-    expected_results = {:error,
-                           ["Expected STRING, got INTEGER 1, at index 0 -> key1",
-                            "Expected STRING, got ATOM :value2, at index 1 -> key1"]}
+    test_schema = [:list, :map, fn -> obj_schema end]
+
+    expected_results =
+      {:error,
+       [
+         "Expected STRING, got INTEGER 1, at index 0 -> key1",
+         "Expected STRING, got ATOM :value2, at index 1 -> key1"
+       ]}
 
     results = Skooma.valid?(test_data, test_schema)
     assert(expected_results == results)
@@ -153,9 +172,13 @@ defmodule SkoomaErrorTest do
   test "tuple types simple error" do
     test_data = {"thing1", "2", 3}
     test_schema = {[:string], [:int], [:atom]}
-    expected_results = {:error,
-                        ["Expected INTEGER, got STRING \"2\", at index 1",
-                         "Expected ATOM, got INTEGER 3, at index 2"]}
+
+    expected_results =
+      {:error,
+       [
+         "Expected INTEGER, got STRING \"2\", at index 1",
+         "Expected ATOM, got INTEGER 3, at index 2"
+       ]}
 
     results = Skooma.valid?(test_data, test_schema)
     assert(expected_results == results)
@@ -175,7 +198,6 @@ defmodule SkoomaErrorTest do
     obj_schema = %{key1: [:string]}
     test_schema = {[:string], obj_schema, [:atom]}
     expected_results = {:error, ["Expected STRING, got INTEGER 1, at index 1 -> key1"]}
-
 
     results = Skooma.valid?(test_data, test_schema)
     assert(expected_results == results)
