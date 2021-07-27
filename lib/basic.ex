@@ -5,7 +5,7 @@ defmodule Skooma.Basic do
     data
     |> validator.()
     |> error(data, type, path)
-    |> custom_validator(data, schema)
+    |> custom_validator(data, schema, path)
   end
 
   defp error(bool, data, expected_type, path) do
@@ -16,37 +16,39 @@ defmodule Skooma.Basic do
     else
       cond do
         Enum.count(path) > 0 ->
-          {:error,
-           "Expected #{expected_type}, got #{data_type} #{inspect(data)}, at #{eval_path(path)}"}
+          {:error, {path, "expected #{expected_type}, got #{data_type} #{inspect(data)}"}}
 
         true ->
-          {:error, "Expected #{expected_type}, got #{data_type} #{inspect(data)}"}
+          {:error, {path, "expected #{expected_type}, got #{data_type} #{inspect(data)}"}}
       end
     end
   end
 
-  defp eval_path(path) do
-    Enum.join(path, " -> ")
+  defp custom_validator(:ok, data, schema, path) do
+    do_custom_validator(data, schema, path)
   end
 
-  defp custom_validator(result, data, schema) do
-    case result do
-      :ok -> do_custom_validator(data, schema)
-      _ -> result
-    end
-  end
+  defp custom_validator(result, _, _, _), do: result
 
-  defp do_custom_validator(data, schema) do
+  defp do_custom_validator(data, schema, path) do
     validators = Enum.filter(schema, &is_function/1)
 
     if Enum.count(validators) == 0 do
       :ok
     else
-      Enum.map(validators, & &1.(data))
+      Enum.map(validators, fn validator ->
+        case :erlang.fun_info(validator)[:arity] do
+          0 -> validator.()
+          1 -> validator.(data)
+          2 -> validator.(data, path)
+        end
+      end)
       |> Enum.reject(&(&1 == :ok || &1 == true))
-      |> Enum.map(
-        &if &1 == false, do: {:error, "Value does not match custom validator"}, else: &1
-      )
+      |> Enum.map(fn
+        false -> {:error, {path, "does not match custom validator"}}
+        {:error, {_path, _error}} = result -> result
+        {:error, error} -> {:error, {path, error}}
+      end)
     end
   end
 end

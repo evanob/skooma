@@ -51,7 +51,7 @@ defmodule Skooma do
           :ok
 
         true ->
-          {:error, "Your data is all jacked up"}
+          {:error, {path, "Your data is all jacked up"}}
       end
 
     handle_results(results)
@@ -109,7 +109,7 @@ defmodule Skooma do
       Enum.map(data, fn {k, v} -> valid?(v, schema[k], path ++ [k]) end)
       |> Enum.reject(&(&1 == :ok))
     else
-      {:error, "Missing some keys"}
+      {:error, {path, "missing some keys"}}
     end
   end
 
@@ -124,9 +124,9 @@ defmodule Skooma do
 
       data
       |> Enum.with_index()
-      |> Enum.map(fn {v, k} -> valid?(v, list_schema, path ++ ["index #{k}"]) end)
+      |> Enum.map(fn {v, k} -> valid?(v, list_schema, path ++ [k]) end)
     else
-      {:error, "Expected list"}
+      {:error, {path, "expected list"}}
     end
   end
 
@@ -137,11 +137,11 @@ defmodule Skooma do
     if Enum.count(data_list) == Enum.count(schema_list) do
       Enum.zip(data_list, schema_list)
       |> Enum.with_index()
-      |> Enum.map(fn {v, k} -> valid?(elem(v, 0), elem(v, 1), path ++ ["index #{k}"]) end)
+      |> Enum.map(fn {v, k} -> valid?(elem(v, 0), elem(v, 1), path ++ [k]) end)
       # |> Enum.map(&(valid?(elem(&1, 0), elem(&1, 1))))
       |> Enum.reject(&(&1 == :ok))
     else
-      {:error, "Tuple schema doesn't match tuple length"}
+      {:error, {path, "tuple schema doesn't match tuple length"}}
     end
   end
 end

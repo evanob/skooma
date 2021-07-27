@@ -3,17 +3,17 @@ defmodule Skooma.Map do
   require Logger
 
   def validate_map(data, schema, path) do
-    with :ok <- is_map(data) |> Utils.to_result("Data is not a map"),
-         :ok <- key_handler(data, schema),
+    with :ok <- is_map(data) |> Utils.to_result({path, "data is not a map"}),
+         :ok <- key_handler(data, schema, path),
          :ok <- value_handler(data, schema, path),
          do: :ok
   end
 
-  defp key_handler(data, schema) do
+  defp key_handler(data, schema, path) do
     schema
     |> Enum.map(&get_required_keys/1)
     |> Enum.reject(&is_nil/1)
-    |> validate_keys(data)
+    |> validate_keys(data, path)
   end
 
   defp get_required_keys({k, v}) do
@@ -24,13 +24,13 @@ defmodule Skooma.Map do
     end
   end
 
-  defp validate_keys(required_keys, data) do
+  defp validate_keys(required_keys, data, path) do
     missing_keys = required_keys -- Map.keys(data)
 
     if Enum.count(missing_keys) == 0 do
       :ok
     else
-      {:error, "Missing required keys: #{inspect(missing_keys)}"}
+      {:error, {path, "missing required keys: #{inspect(missing_keys)}"}}
     end
   end
 
@@ -60,9 +60,11 @@ defmodule Skooma.Map do
     errors =
       Enum.map(validators, & &1.(data))
       |> Enum.reject(&(&1 == :ok || &1 == true))
-      |> Enum.map(
-        &if &1 == false, do: {:error, "Value does not match custom validator"}, else: &1
-      )
+      |> Enum.map(fn
+        false -> {:error, {path, "does not match custom validator"}}
+        {:error, {_path, _error}} = result -> result
+        {:error, error} -> {:error, {path, error}}
+      end)
 
     if length(errors) > 0 do
       errors
