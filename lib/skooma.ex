@@ -45,7 +45,7 @@ defmodule Skooma do
           Basic.validator(&is_boolean/1, "BOOLEAN", data, schema, path)
 
         Enum.member?(schema, :atom) ->
-          Basic.validator(&is_atom/1, "ATOM", data, schema, path)
+          atom_handler(data, schema, path)
 
         Enum.member?(schema, :any) ->
           :ok
@@ -73,6 +73,16 @@ defmodule Skooma do
         |> List.flatten()
         |> (fn n -> {:error, n} end).()
     end
+  end
+
+  defp atom_handler(data, schema, path) do
+    Basic.validator(
+      fn value -> is_atom(value) and not is_nil(value) end,
+      "ATOM",
+      data,
+      schema,
+      path
+    )
   end
 
   defp union_handler(data, schema, path) do
