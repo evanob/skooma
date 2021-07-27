@@ -4,16 +4,16 @@ defmodule Skooma.Mixfile do
   def project do
     [
       app: :skooma,
-      version: "0.2.0",
+      version: "0.3.0",
       elixir: "~> 1.5",
-      start_permanent: Mix.env == :prod,
+      start_permanent: Mix.env() == :prod,
       deps: deps(),
       description: "Data structure validator for elixir",
       package: [
         name: "skooma",
         licenses: ["MIT"],
-        maintainers: ["bcoop713@gmail.com"],
-        links: %{"Github" => "https://github.com/bcoop713/skooma"}
+        maintainers: ["Evan O'Brien"],
+        links: %{"Github" => "https://github.com/evanob/skooma"}
       ]
     ]
   end
