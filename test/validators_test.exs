@@ -40,7 +40,7 @@ defmodule ValidatorsTest do
 
   test "inclusion function" do
     test_data = 15
-    test_schema = [:list, Validators.inclusion([1..5])]
+    test_schema = [:int, Validators.inclusion([1..5])]
     expected_results = {:error, ["Value is not included in the options: [1..5]"]}
 
     results = Skooma.valid?(test_data, test_schema)
