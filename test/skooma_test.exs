@@ -193,6 +193,27 @@ defmodule SkoomaTest do
     assert :ok = Skooma.valid?(test_data, test_schema)
   end
 
+  test "list of union types" do
+    test_data = ["value", 1]
+    test_schema = [:list, [:union, [:string, :int]]]
+
+    assert :ok = Skooma.valid?(test_data, test_schema)
+  end
+
+  test "list of lists types" do
+    test_data = [["value", "foo"], ["test"]]
+    test_schema = [:list, [:list, :string]]
+
+    assert :ok = Skooma.valid?(test_data, test_schema)
+  end
+
+  test "list of list of union types" do
+    test_data = [["value", "foo", 1], ["test", 0], [-2]]
+    test_schema = [:list, [:list, [:union, [:string, :number]]]]
+
+    assert :ok = Skooma.valid?(test_data, test_schema)
+  end
+
   test "tuple types simple" do
     test_data = {"thing1", 2, :atom3}
     test_schema = {:string, :int, :atom}

@@ -105,7 +105,12 @@ defmodule Skooma do
 
   defp validate_list(data, schema, path) do
     if is_list(data) do
-      list_schema = Enum.reject(schema, &(&1 == :list))
+      list_schema =
+        case Enum.reject(schema, &(&1 == :list)) do
+          [[:list | _] = nested_list_schema] -> nested_list_schema
+          [[:union | _] = union_list_schema] -> union_list_schema
+          list_schema -> list_schema
+        end
 
       data
       |> Enum.with_index()
