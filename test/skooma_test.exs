@@ -218,6 +218,7 @@ defmodule SkoomaTest do
     %{
       :key1 => [:string],
       "key2" => [:map, %{color: [:string]}],
+      :key3 => [:map, %{foo: :string}, :not_required],
       "things" => [:list, :string],
       "stuff" => %{key3: %{key4: [:string, :not_required]}}
     }
@@ -225,6 +226,7 @@ defmodule SkoomaTest do
       %{
         :key1 => "value1",
         "key2" => %{color: "blue"},
+        :key3 => nil,
         "things" => ["thing1", "thing2"],
         "stuff" => %{key3: %{}}
       },
@@ -239,6 +241,7 @@ defmodule SkoomaTest do
       %{
         :key1 => "value1",
         "key2" => %{color: "blue"},
+        :key3 => nil,
         "things" => ["thing1", "thing2"],
         "stuff" => %{key3: %{key4: 2}}
       }

@@ -20,11 +20,11 @@ defmodule Skooma do
         Enum.member?(schema, :list) ->
           validate_list(data, schema, path)
 
-        Enum.member?(schema, :map) ->
-          Skooma.Map.nested_map(data, schema, path)
-
         Enum.member?(schema, :not_required) ->
           handle_not_required(data, schema, path)
+
+        Enum.member?(schema, :map) ->
+          Skooma.Map.nested_map(data, schema, path)
 
         Enum.member?(schema, :union) ->
           union_handler(data, schema, path)
