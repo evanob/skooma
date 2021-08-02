@@ -16,7 +16,7 @@ defmodule SkoomaTest do
 
   def assert_supports_not_required(type) do
     if is_list(type) do
-      assert {:error, _} = Skooma.valid?(nil, type |> List.delete(:not_required))
+      assert {:error, _} = Skooma.valid?(nil, type |> Enum.filter(&(&1 != :not_required)))
     end
 
     assert :ok = Skooma.valid?(nil, [type, :not_required])
@@ -337,9 +337,11 @@ defmodule SkoomaTest do
   end
 
   test "list of union types, with not required" do
-    [:list, [:union, [:string, :int], :not_required]]
+    [:list, [:union, [:string, :int, %{foo: :string}], :not_required], :not_required]
     |> assert_valid_values([
       ["value", 1, nil],
+      [%{foo: "bar"}],
+      nil,
       [nil],
       [1, nil]
     ])
@@ -367,11 +369,12 @@ defmodule SkoomaTest do
     [:list, [:list, :string, :not_required]]
     |> assert_valid_values([
       [["value", "foo"], ["test"], [nil]],
-      [[nil]]
+      [[nil]],
+      [nil]
     ])
     |> assert_invalid_values([
       [["value", 1], ["test"]],
-      [nil]
+      nil
     ])
   end
 

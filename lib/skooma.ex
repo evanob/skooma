@@ -114,19 +114,24 @@ defmodule Skooma do
   end
 
   defp validate_list(data, schema, path) do
-    if is_list(data) do
-      list_schema =
-        case Enum.reject(schema, &(&1 == :list)) do
-          [[:list | _] = nested_list_schema] -> nested_list_schema
-          [[:union | _] = union_list_schema] -> union_list_schema
-          list_schema -> list_schema
-        end
+    cond do
+      is_list(data) ->
+        list_schema =
+          case Enum.reject(schema, &(&1 == :list)) do
+            [[:list | _] = nested_list_schema | _] -> nested_list_schema
+            [[:union | _] = union_list_schema | _] -> union_list_schema
+            list_schema -> list_schema
+          end
 
-      data
-      |> Enum.with_index()
-      |> Enum.map(fn {v, k} -> valid?(v, list_schema, path ++ [k]) end)
-    else
-      {:error, {path, "expected list"}}
+        data
+        |> Enum.with_index()
+        |> Enum.map(fn {v, k} -> valid?(v, list_schema, path ++ [k]) end)
+
+      is_list(schema) and :not_required in schema and data == nil ->
+        :ok
+
+      true ->
+        {:error, {path, "expected list"}}
     end
   end
 
